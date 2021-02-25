@@ -33,6 +33,7 @@ python_interface/db/astapp.db
 
 # Python module specific ignores
 *.egg-info
+__pycache__
 
 # images
 benchmark/images/*

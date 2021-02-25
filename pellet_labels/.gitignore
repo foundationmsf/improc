@@ -3,3 +3,5 @@ amman_atb_data
 i2a_atb_data
 models/test
 test_data/
+/models/keras_tensorboard/
+/models/pellet_labels_model.h5
