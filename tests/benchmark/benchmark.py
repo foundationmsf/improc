@@ -22,7 +22,7 @@ def run_improc_analysis(img_dir, img_filename, pickle_preproc, method):
     """
     Runs improc analysis:
       1. Preprocesses the image using 1 of 2 methods:
-         Fast option: If pickle_preproc is provided, reads preproccessing data 
+         Fast option: If pickle_preproc is provided, reads preprocessing data
          from pickle file.
          Slow option: If pickle_preproc is not provided, reads the image and
          runs preprocessing.
@@ -168,7 +168,7 @@ def run_one_benchmark(item, img_dir, results, preproc_results, method, use_multi
         if not use_multiproc: tqdm.write("File not found: {}".format(e))
         return (None,None,None)
     except ErrorInPreproc as e:
-        if not use_multiproc: tqdm.write("Improc threw expection on file {} {}".format(filename, e))
+        if not use_multiproc: tqdm.write("Improc threw for file {} {}".format(filename, e))
         results.record_exception()
         return (None,None,None)
     except Exception as e:
