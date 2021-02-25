@@ -21,6 +21,7 @@
 #define AST_EXCEPTIONS
 
 #include <exception>
+#include <stdexcept>
 #include <string>
 
 using namespace std;
