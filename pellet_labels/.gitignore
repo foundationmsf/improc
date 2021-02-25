@@ -1,7 +1,9 @@
 __MACOSX
-amman_atb_data
-i2a_atb_data
-models/test
-test_data/
+/amman_atb_data/
+/ast_pictures/
+/i2a_atb_data/
 /models/keras_tensorboard/
 /models/pellet_labels_model.h5
+/models/test/
+/pellets/
+/test_data/
