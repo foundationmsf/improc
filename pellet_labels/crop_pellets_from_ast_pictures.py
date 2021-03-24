@@ -51,17 +51,22 @@ def main():
         # Process the AST.
         ast = astimp.AST(img)
 
-        print("%s: %s" % (ast_picture_path, ast.labels_text))
+        print(ast_picture_path, end=" ")
 
         # Write a separate image file for each pellet.
         for i, pellet in enumerate(ast.pellets):
+            pellet_match = astimp.getOnePelletText(pellet)
             # Set the subdirectory based on the recognized label.
-            label_with_space = add_space(ast.labels_text[i])
+            if pellet_match.confidence < 0.95:
+                label_with_space = "unknown"
+            else:
+                label_with_space = add_space(pellet_match.text)
+            print(label_with_space, end=", ")
             label_subdir = os.path.join(PELLETS_DIR, label_with_space)
             Path(label_subdir).mkdir(parents=True, exist_ok=True)
             pellet_filename = append_id(ast_picture, i + 1)
             pellet_path = os.path.join(label_subdir, pellet_filename)
             Image.fromarray(pellet).save(pellet_path)
 
-
+        print()
 main()
