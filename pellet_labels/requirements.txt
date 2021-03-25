@@ -1,6 +1,6 @@
 numpy
 scipy
 opencv-python
-tensorflow>=1.14,<2
+tensorflow
 pillow
 pandas

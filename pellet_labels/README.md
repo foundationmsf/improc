@@ -89,7 +89,7 @@ You can convert a keras model (.h5) to tflite with the following command
 
 ## Convert tflite model to C++ source file
 
-The tflite model is automatically converted to a C++ source file used in the Antibiogo pipeline in `astimplib/CMakeLists.txt`.
+The tflite model is automatically converted to a C++ source file used in the Antibiogo pipeline in [astimplib/CMakeLists.txt](../astimplib/CMakeLists.txt).
 
 ## Run tests
 

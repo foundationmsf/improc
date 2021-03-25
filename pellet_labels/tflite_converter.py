@@ -18,10 +18,9 @@ def get_args():
 	return args
 
 def convert(source, destination):
-	#model = tf.keras.models.load_model(
-	#	args.source, {'EntropyThresholdLayer': EntropyThresholdLayer})
-	converter = tf.lite.TFLiteConverter.from_keras_model_file(
-		source, custom_objects={'EntropyThresholdLayer': EntropyThresholdLayer})
+	model = tf.keras.models.load_model(
+		args.source, {'EntropyThresholdLayer': EntropyThresholdLayer})
+	converter = tf.lite.TFLiteConverter.from_keras_model(model)
 	tflite_model = converter.convert()
 	with open(destination, 'wb') as f:
 		f.write(tflite_model)
