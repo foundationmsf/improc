@@ -24,29 +24,29 @@ def get_args():
       required=True,
       help='Input folder with AST pictures.')
   parser.add_argument(
-      '--inhibition',
+      '--no-inhibition',
       dest='show_inhibition',
-      type=bool,
+      action='store_false',
       default=True,
-      help='Draw the inhibition zones around each pellet?')
+      help='Do not draw the inhibition zones around each pellet.')
   parser.add_argument(
-      '--diam',
+      '--no-diam',
       dest='show_diam',
-      type=bool,
+      action='store_false',
       default=True,
-      help='Print the diameter in mm?')
+      help='Do not print the diameter in mm.')
   parser.add_argument(
-      '--label',
+      '--no-label',
       dest='show_pellet_label',
-      type=bool,
+      action='store_false',
       default=True,
       help='Print the pellet label?')
   parser.add_argument(
-      '--popup',
+      '--no-popup',
       dest='show_popup',
-      type=bool,
+      action='store_false',
       default=True,
-      help='Show each image in a popup window? (Good for debugging)')
+      help='Do not show each image in a popup window.')
   parser.add_argument(
       '--output',
       dest='output_subfolder',
