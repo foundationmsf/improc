@@ -55,7 +55,7 @@ def main():
         for i, pellet in enumerate(ast.pellets):
             pellet_match = astimp.getOnePelletText(pellet)
             # Set the subdirectory based on the recognized label.
-            if pellet_match.confidence < 0.02:
+            if pellet_match.confidence < 0.95:
                 label_with_space = "unknown"
             else:
                 label_with_space = add_space(pellet_match.text)
