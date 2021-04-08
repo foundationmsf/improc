@@ -1,9 +1,6 @@
 """
-* Reads all AST pictures
-* Uses improc to process each
-* Crops antibiotic pellets
-* Stores the cropped pictures into folders named after the recognized label
-* If the label is not recognized, stores into `unknown`
+Reads all AST pictures, uses improc to process each, crops antibiotic pellets
+and stores the cropped pictures into folders named after the recognized label.
 """
 
 # Build and install 'astimp' Python module as described in ../README.md.
@@ -13,7 +10,12 @@ from imageio import imread, imwrite
 import os
 from PIL import Image
 from pathlib import Path
-from dirs import AST_PICTURES_DIR, PELLETS_DIR
+
+# Relative path to read the AST pictures from.
+AST_PICTURES_DIR = "ast_pictures"
+# Relative path to write the cropped pellet images to.
+PELLETS_DIR = "pellets"
+
 
 def append_id(filename, index):
     """
