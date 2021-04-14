@@ -5,13 +5,14 @@ configure_file("include/astimp_version.hpp.in" "include/astimp_version.hpp")
 
 include_directories(include)
 
-set(PELLET_LABEL_TFLITE_MODEL
-    ${CMAKE_CURRENT_SOURCE_DIR}/../pellet_labels/models/ensemble_model.tflite)
-set(GENERATE_CPP_MODEL_PY ${CMAKE_CURRENT_SOURCE_DIR}/../pellet_labels/generate_cpp_model.py)
+set(PELLET_LABELS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../pellet_labels)
+set(PELLET_LABEL_TFLITE_MODEL ${PELLET_LABELS_DIR}/models/ensemble_model.tflite)
+set(GENERATE_CPP_MODEL_PY ${PELLET_LABELS_DIR}/generate_cpp_model.py)
 
 add_custom_command(
     OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/gen/pellet_label_tflite_model.cpp
     DEPENDS ${GENERATE_CPP_MODEL_PY}
+    DEPENDS ${PELLET_LABELS_DIR}/trainer/pellet_list.py
     DEPENDS ${PELLET_LABEL_TFLITE_MODEL}
     COMMAND ${CMAKE_COMMAND} -E make_directory gen
     COMMAND python3 ${GENERATE_CPP_MODEL_PY} ${PELLET_LABEL_TFLITE_MODEL} > gen/pellet_label_tflite_model.cpp)
