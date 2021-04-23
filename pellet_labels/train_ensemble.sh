@@ -5,7 +5,7 @@ REGION=europe-west1
 SCALE_TIER=BASIC_GPU
 
 #JOB_NAME and JOB_DIR must be unique and therefore updated for each run
-JOB_NAME=pellet_labels_63_classes1
+JOB_NAME=pellet_labels_63_classes2
 JOB_DIR=gs://pellet_labels/${JOB_NAME}/pellet_labels_model
 
 #Check that the trainer works properly before launching jobs in gcloud
@@ -18,8 +18,8 @@ function train_model {
     --module-name trainer.task \
     --region $REGION \
     --scale-tier $SCALE_TIER \
-    --python-version 3.5 \
-    --runtime-version 1.13 \
+    --python-version 3.7 \
+    --runtime-version 2.4 \
     --job-dir $JOB_DIR$1 \
     -- \
     --train-files gs://pellet_labels/amman_atb_data.zip gs://pellet_labels/i2a_atb_data.zip \

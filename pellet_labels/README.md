@@ -63,7 +63,11 @@ REGION (preferrably europe-west1). The command assume a specific location and
 project (pellet-labels-260211) that are set up for the MSF Google Cloud account.
 Note that JOB_NAME needs to be unique for every run.
 
-> `JOB_NAME=train_run REGION=europe-west1 JOB_DIR=gs://pellet_labels/${JOB_NAME}/pellet_labels_model && gcloud ai-platform jobs submit training $JOB_NAME --package-path trainer/ --module-name trainer.task --region $REGION --scale-tier BASIC_GPU --python-version 3.5 --runtime-version 1.13 --job-dir $JOB_DIR --stream-logs -- --train-files gs://pellet_labels/amman_atb_data.zip gs://pellet_labels/i2a_atb_data.zip --weights 3 1`
+> `JOB_NAME=train_run REGION=europe-west1 JOB_DIR=gs://pellet_labels/${JOB_NAME}/pellet_labels_model && gcloud ai-platform jobs submit training $JOB_NAME --package-path trainer/ --module-name trainer.task --region $REGION --scale-tier BASIC_GPU --python-version 3.7 --runtime-version 2.4 --job-dir $JOB_DIR --stream-logs -- --train-files gs://pellet_labels/amman_atb_data.zip gs://pellet_labels/i2a_atb_data.zip --weights 3 1`
+
+## Training the ensemble model
+
+See [ENSEMBLE.md](ENSEMBLE.md).
 
 ## Infer
 

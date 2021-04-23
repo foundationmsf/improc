@@ -5,7 +5,7 @@ REQUIRED_PACKAGES = [
 	'opencv-python',
 	'pillow',
 	'scipy',
-	'h5py==2.7.0']
+	'h5py']
 
 setup(
     name='pellets_label',
