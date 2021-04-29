@@ -72,37 +72,37 @@ class BenchmarkResult:
         perc_disks_found = self.total_improc_atb / self.total_expected_atb
         abs_diam_diffs = [abs(i) for i in self.diam_diffs]
         n_matched_pellets = len(self.diam_diffs)
-        diffs_lt_1mm = sum([diff < 1.0 for diff in abs_diam_diffs])
-        diffs_lt_2mm = sum([diff < 2.0 for diff in abs_diam_diffs])
-        diffs_lt_3mm = sum([diff < 3.0 for diff in abs_diam_diffs])
-        diffs_lt_6mm = sum([diff < 6.0 for diff in abs_diam_diffs])
-        diffs_more_mm = sum([diff >= 6.0 for diff in abs_diam_diffs])
+        diffs_lt_1mm = sum([diff <= 1.0 for diff in abs_diam_diffs])
+        diffs_lt_2mm = sum([diff <= 2.0 for diff in abs_diam_diffs])
+        diffs_lt_3mm = sum([diff <= 3.0 for diff in abs_diam_diffs])
+        diffs_lte_5mm = sum([diff <= 5.0 for diff in abs_diam_diffs])
+        diffs_more_mm = sum([diff > 5.0 for diff in abs_diam_diffs])
         perc_1mm_diffs = diffs_lt_1mm / n_matched_pellets
         perc_2mm_diffs = diffs_lt_2mm / n_matched_pellets
         perc_3mm_diffs = diffs_lt_3mm / n_matched_pellets
-        perc_6mm_diffs = diffs_lt_6mm / n_matched_pellets
+        perc_5mm_diffs = diffs_lte_5mm / n_matched_pellets
         perc_more_diffs = diffs_more_mm / n_matched_pellets
         error_classes = {
             "< 1mm" : perc_1mm_diffs,
             "1 to 2mm" : perc_2mm_diffs-perc_1mm_diffs,
             "2 to 3mm" : perc_3mm_diffs - perc_2mm_diffs,
-            "3 to 6mm" : perc_6mm_diffs - perc_3mm_diffs,
-            "> 6mm" : perc_more_diffs
+            "3 to 5mm" : perc_5mm_diffs - perc_3mm_diffs,
+            "> 5mm" : perc_more_diffs
         }
 
         perc_name_match = n_matched_pellets / self.total_improc_atb
         perc_exception = self.n_exception / self.n_files_processed
         print("% of disks found:                {0:.2%} ({1} / {2})"
               .format(perc_disks_found, self.total_improc_atb, self.total_expected_atb))
-        print("% of diameter diffs <1mm:        {0:.2%} ({1} / {2})"
+        print("% of diameter diffs <=1mm:        {0:.2%} ({1} / {2})"
               .format(perc_1mm_diffs, diffs_lt_1mm, n_matched_pellets))
-        print("% of diameter diffs <2mm:        {0:.2%} ({1} / {2})"
+        print("% of diameter diffs <=2mm:        {0:.2%} ({1} / {2})"
               .format(perc_2mm_diffs, diffs_lt_2mm, n_matched_pellets))
-        print("% of diameter diffs <3mm:        {0:.2%} ({1} / {2})"
+        print("% of diameter diffs <=3mm:        {0:.2%} ({1} / {2})"
               .format(perc_3mm_diffs, diffs_lt_3mm, n_matched_pellets))
-        print("% of diameter diffs <6mm:        {0:.2%} ({1} / {2})"
-              .format(perc_6mm_diffs, diffs_lt_6mm, n_matched_pellets))
-        print("% of diameter diffs >=6mm:        {0:.2%} ({1} / {2})"
+        print("% of diameter diffs <=5mm:        {0:.2%} ({1} / {2})"
+              .format(perc_5mm_diffs, diffs_lte_5mm, n_matched_pellets))
+        print("% of diameter diffs >5mm:        {0:.2%} ({1} / {2})"
               .format(perc_more_diffs, diffs_more_mm, n_matched_pellets))
         print("% of antibiotic name matches:    {0:.2%} ({1} / {2})"
               .format(self.n_label_match / self.label_match_denom, self.n_label_match, self.label_match_denom))

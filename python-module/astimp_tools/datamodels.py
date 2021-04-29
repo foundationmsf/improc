@@ -1,4 +1,3 @@
-from .image import subimage_by_roi
 import astimp
 
 class Antibiotic():
@@ -110,7 +109,11 @@ class AST():
     def labels_text(self):
         """label texts"""
         if self._labels_text is None:
-            self._labels_text = tuple(label.text for label in self.labels)
+            self._labels_text = tuple(
+                # Ignore the label if confidence not high enough. The ensemble
+                # model is good at identifying unknown pellets.
+                label.text if label.confidence >= 0.95 else None
+                for label in self.labels)
         return self._labels_text
 
     @property
