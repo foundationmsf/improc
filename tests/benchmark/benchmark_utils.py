@@ -5,8 +5,6 @@ Utility functions and methods to help with benchmark.py.
 
 
 import numpy as np
-import os
-import warnings
 import yaml
 from collections import defaultdict
 import matplotlib.pyplot as plt
@@ -187,7 +185,7 @@ class BenchmarkResult:
 
 def parse_and_validate_config(config_path):
     """
-    Parses expected_results.yml (present in the same directory as benchmark.py)
+    Parses the YAML file given by `config_path`.
     Skips and logs a warning for any image files that don't exist.
     yaml library will raise errors if the required label and diameter fields
     are not present.
