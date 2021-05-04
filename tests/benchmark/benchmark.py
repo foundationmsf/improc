@@ -12,6 +12,7 @@ from argparse import ArgumentParser
 from benchmark_utils import *
 from preprocess_img import *
 from tqdm import tqdm
+import os
 
 from multiprocessing import Pool, cpu_count
 from functools import partial
