@@ -8,14 +8,14 @@ http://stat.genopole.cnrs.fr/ast.zip in Creteil's hospital/Blood-enriched medium
 * Download and unpack ast.zip.
 * Run this script
 * Run benchmark - see README.md in this folder. For instance:
-sh benchmark.sh -nb -c annotations/creteil_nature_com/Creteil_Nature_Com.yml -i ~/Downloads/AST_pictures_and_measurements/Creteil\'s\ Hospital/Blood-enriched\ medium/AST\ pictures/standard
+sh benchmark.sh -nb -c annotations/creteil_nature_com/Creteil_Nature_Com.yml -i annotations/creteil_nature_com/images/blood_agar
 """
 
 import benchmark_tools as bt
 import os
 
 # Folder with the downloaded pictures:
-csv_dir = "~/Downloads/AST_pictures_and_measurements/Creteil's Hospital/Blood-enriched medium"
+csv_dir = "annotations/creteil_nature_com"
 
 # Read the CSV and overwrite the YML.
 creteil_set = bt.creteil_nature_com.Annotations_set_Creteil_nature_com(csv_dir)

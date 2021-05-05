@@ -5,13 +5,13 @@ See benchmark/README.md for more documentation.
 """
 
 import astimp
-from imageio import imread
 import matplotlib.pyplot as plt
 import numpy as np
 from argparse import ArgumentParser
 from benchmark_utils import *
 from preprocess_img import *
 from tqdm import tqdm
+import os
 
 from multiprocessing import Pool, cpu_count
 from functools import partial
@@ -165,13 +165,16 @@ def run_one_benchmark(item, img_dir, results, preproc_results, method, use_multi
         improc_results, ast_image = run_improc_analysis(
             img_dir, filename, preproc_results, method)
     except FileNotFoundError as e:
+        print(e)
         if not use_multiproc: tqdm.write("File not found: {}".format(e))
         return (None,None,None)
     except ErrorInPreproc as e:
+        print(e)
         if not use_multiproc: tqdm.write("Improc threw for file {} {}".format(filename, e))
         results.record_exception()
         return (None,None,None)
     except Exception as e:
+        print(e)
         # raise ## UNCOMMENT FOR DEBUG
         if not use_multiproc: tqdm.write("Error {} {}".format(filename, e))
         return (None,None,None)

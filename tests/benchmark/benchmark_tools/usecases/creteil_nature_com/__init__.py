@@ -70,4 +70,3 @@ class Annotations_set_Creteil_nature_com(Annotations_set):
             if i in self.ast_ids:
                 out.append(self.get_ast(i))
         return out
-    
