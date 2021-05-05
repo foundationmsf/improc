@@ -34,7 +34,7 @@ Amman images are found [here](https://drive.google.com/open?id=1nyb1L9lxmx6PSvdT
 
 # Benchmark.sh args:
 
-- `-nb or --nobuild`: Skip build. You should re-build (omit `nb`) whenever you want to test new C++, .pyd, or .pyx code. You don't need to rebuild to test new vanilla python code.
+- `-nb or --nobuild`: *Must be first arg.* Skip build. You should re-build (omit `nb`) whenever you want to test new C++, .pyd, or .pyx code. You don't need to rebuild to test new vanilla python code.
 
 -  `-d or --display`: Display overlaid results per-AST.
 

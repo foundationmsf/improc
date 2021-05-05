@@ -18,7 +18,7 @@
 # This file is part of the ASTapp image processing library
 # Author: Marco Pascucci
 
-from .usecases import creteil, creteil_es_test, amman, amman_blood_agar, whonet_nada
+from .usecases import creteil, creteil_es_test, creteil_nature_com, amman, amman_blood_agar, whonet_nada
 from . import astscript
 
 __doc__ = "This module contains abstract classes and implementations to easily " \
