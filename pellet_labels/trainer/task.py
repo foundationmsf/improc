@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 
 import tensorflow as tf
 from tensorflow.keras import layers
@@ -8,6 +9,8 @@ import numpy as np
 from . import model
 from . import pellet_list
 from util import gcs_util as util
+from PIL import Image
+from pathlib import Path
 
 PELLET_LIST = pellet_list.PELLET_LIST
 WORKING_DIR = os.getcwd()
@@ -30,12 +33,12 @@ def get_args():
         '--num-epochs',
         type=int,
         default=120,
-        help='number of times to go through the data, default=500')
+        help='number of times to go through the data, default=120')
     parser.add_argument(
         '--batch-size',
         type=int,
         default=64,
-        help='number of records to read during each training step, default=128')
+        help='number of records to read during each training step, default=64')
     parser.add_argument(
         '--learning-rate',
         type=float,
@@ -64,8 +67,8 @@ def get_args():
     parser.add_argument(
         '--image-zoom',
         type=float,
-        default=0.05,
-        help='zoom to use for image augmentation, default=.05')
+        default=0.10,
+        help='zoom to use for image augmentation, default=.10')
     parser.add_argument(
         '--brightness-range-min',
         type=float,
@@ -75,9 +78,9 @@ def get_args():
     parser.add_argument(
         '--brightness-range-max',
         type=float,
-        default=1.2,
+        default=1.5,
         help='brightness range maximum to use for image augmentation,\
-        default=1.2')
+        default=1.5')
     parser.add_argument(
         '--min-samples-per-class',
         type=int,
@@ -97,6 +100,12 @@ def get_args():
         nargs='*',
         help='weight to attribute to each training set, \
         there should be as many value as there are training folders')
+    parser.add_argument(
+        '--debug-image-data-generator',
+        type=int,
+        default=0,
+        help='if > 0, creates a directory ImageDataGenerator and outputs the \
+        required number of images. Use to debug ImageDataGenerator settings.')
     args, _ = parser.parse_known_args()
     return args
 
@@ -162,8 +171,8 @@ def train_and_evaluate(args):
         args.learning_rate)
 
     train_generator = tf.keras.preprocessing.image.ImageDataGenerator(
-        samplewise_center=True,
-        samplewise_std_normalization=True,
+        samplewise_center=args.debug_image_data_generator == 0,
+        samplewise_std_normalization=args.debug_image_data_generator == 0,
         rotation_range=args.rotation_range,
         width_shift_range=args.image_shift,
         height_shift_range=args.image_shift,
@@ -174,6 +183,8 @@ def train_and_evaluate(args):
     train_flow = train_generator.flow(train_images, train_labels,
         sample_weight=sample_weights,
         batch_size=args.batch_size)
+
+    debug_image_data_generator(train_flow)
 
     valid_generator = model.get_data_generator()
 
@@ -208,6 +219,26 @@ def train_and_evaluate(args):
     if args.job_dir.startswith('gs://'):
       gcs_path = os.path.join(args.job_dir, MODEL_NAME)
       util.copy_file_to_gcs(checkpoint_path, gcs_path)
+
+
+def debug_image_data_generator(train_flow):
+    if args.debug_image_data_generator == 0:
+        return
+
+    outdir = "ImageDataGenerator"
+    Path(outdir).mkdir(parents=True, exist_ok=True)
+    for i in range(0, args.debug_image_data_generator):
+        image, label, sample_weight = next(train_flow)
+        # tf.keras.utils.to_categorical(
+        # 		valid_labels, len(class_list))
+        pellet_path = os.path.join(outdir, str(i) + ".jpg")
+        image = image[0].reshape((64, 64))
+        Image.fromarray(image).convert('RGB').save(pellet_path)
+
+    print("Generated", args.debug_image_data_generator, "images in directory",
+          outdir)
+    sys.exit(111)
+
 
 if __name__ == '__main__':
     args = get_args()
