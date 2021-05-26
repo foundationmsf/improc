@@ -14,6 +14,7 @@ import sys
 from dirs import PELLETS_DIR
 from os import path
 from pathlib import Path
+import pandas as pd
 
 sys.path.append("..")
 from trainer.pellet_list import PELLET_LIST
@@ -80,28 +81,33 @@ def check_pellet_labels():
 
 def list_data_dirs():
     """Lists the number of samples in each data dir."""
+    counts = []
     for data_path in sub_paths(PELLET_LABELS_DIR):
         if "valid" not in sub_dirs(data_path) \
                 or "train" not in sub_dirs(data_path):
             continue
 
-        count = 0
         for set_path in sub_paths(data_path):
-            for label_path in sub_paths(set_path):
-                count += len(os.listdir(label_path))
+            for label_path in sub_dirs(set_path):
+                count_label = len(os.listdir(os.path.join(set_path, label_path)))
+                counts.append([data_path, label_path, count_label])
 
-        print(data_path, "contains", count, "samples")
+    df = pd.DataFrame(counts, columns=["Dataset", "Label", "Count"])
+    with pd.option_context('display.max_rows', None,
+                           'display.max_columns', None):
+        print(df.groupby(["Label"]).sum().describe())
+        print(df.groupby(["Label"]).sum().sort_values("Label"))
 
 
-def zip_data():
+def zip_data(output):
     """Zips the `output` folder into the `data` folder where it is expected
     for training."""
-    zip_file = path.join("data", args.output + ".zip")
+    zip_file = path.join("data", output + ".zip")
     print("Re-writing %s" % zip_file)
     os.chdir(PELLET_LABELS_DIR)
     if path.exists(zip_file):
         os.system("rm %s" % zip_file)
-    os.system("zip %s %s -r -q" % (zip_file, args.output))
+    os.system("zip %s %s -r -q" % (zip_file, output))
 
 
 def split_into_train_and_valid():
@@ -128,8 +134,9 @@ def split_into_train_and_valid():
                             path.join(target_folder, file))
 
 
-args = get_args()
-check_pellet_labels()
-split_into_train_and_valid()
-list_data_dirs()
-zip_data()
+if __name__ == "__main__":
+    args = get_args()
+    check_pellet_labels()
+    split_into_train_and_valid()
+    list_data_dirs()
+    zip_data(args.output)

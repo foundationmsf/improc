@@ -62,9 +62,14 @@ def main():
             print(label_with_space, end=", ")
             label_subdir = os.path.join(PELLETS_DIR, label_with_space)
             Path(label_subdir).mkdir(parents=True, exist_ok=True)
-            pellet_filename = append_id(ast_picture, i + 1)
+            pellet_filename = append_id(ast_picture,
+                                        i + "_" + pellet_match.text + "_" +
+                                        str(pellet_match.confidence))
             pellet_path = os.path.join(label_subdir, pellet_filename)
             Image.fromarray(pellet).save(pellet_path)
 
         print()
-main()
+
+
+if __name__ == "__main__":
+    main()

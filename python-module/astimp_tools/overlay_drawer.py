@@ -1,6 +1,5 @@
 """
-Draws overlay on AST pictures. Takes one argument: the path to the folder with
-pictures. Reads all pictures in the given folder,
+Draws overlay on AST pictures. Reads all pictures in the --input folder,
 for each measures and draws the inhibition zones, diameters and labels, and
 writes a same-named file into a subfolder.
 """
