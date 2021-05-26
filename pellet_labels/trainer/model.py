@@ -1,3 +1,6 @@
+import glob
+import random
+
 import tensorflow as tf
 from tensorflow.keras import layers
 import numpy as np
@@ -30,12 +33,14 @@ def map_to_common_space(pill):
 	return pill
 
 def load_and_preprocess_data(path, working_dir, img_size,
-		class_list, ukn_classes=[]):
+		class_list, ukn_classes=[], max_per_class=None):
 	"""Load and preprocess the data for training or infereance
 
 	ukn_classes are classes that might have been removed from class_list
 	to enable assessing the way the model handle uncertainty. The data matching
 	those classes will be returned in ukn_data
+
+	max_per_class allows to limit the number of training samples per class
 	"""
 	if not path:
 		raise ValueError('No dataset file defined')
@@ -65,17 +70,17 @@ def load_and_preprocess_data(path, working_dir, img_size,
 	(train_data, train_labels) = ([], [])
 	(valid_data, valid_labels) = ([], [])
 	ukn_data = []
-	data = [(train_data, train_labels), (valid_data, valid_labels)]
 
 	for (images, labels, folder) in [(train_data, train_labels, 'train'),
 															(valid_data, valid_labels, 'valid')]:
 		path = os.path.join(local_path, folder)
 		for d in os.listdir(path):
-			if d[0] == '.':
-				continue
-			for f in os.listdir(os.path.join(path, d)):
-				if f[0] == '.':
-					continue
+			files = glob.glob(os.path.join(path, d, '*'))
+			if folder == "train":
+				if max_per_class and len(files) > max_per_class:
+					files = random.sample(files, max_per_class)
+
+			for f in files:
 				pill = cv2.imread(os.path.join(path, d, f))
 				pill = format_pill_for_inference(pill, img_size)
 				pill = map_to_common_space(pill)
