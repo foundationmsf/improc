@@ -58,6 +58,8 @@ Use the following command
 
 ### Running on gcloud proper
 
+Copy all data files to gcloud: `gsutil -m cp data/* gs://pellet_labels`
+
 Use the following command after population the variables JOB_NAME, JOB_DIR and
 REGION (preferrably europe-west1). The command assume a specific location and
 project (pellet-labels-260211) that are set up for the MSF Google Cloud account.

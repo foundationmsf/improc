@@ -14,6 +14,8 @@ To train multiple models in parallel on gcloud, run
 Modify the script to change the parameters you'd pass to trainer/task.py, the
 destination of the resulting model or the gcloud configuration.
 
+Monitor the training: [docs](https://cloud.google.com/ai-platform/training/docs/monitor-training).
+
 ## Evaluate the ensemble model
 
 eval_ensemble.py lets you load ensemble models from Google Storage and evaluate

@@ -1,18 +1,18 @@
 import argparse
 import os
-import time
 import numpy as np
 import tensorflow as tf
 from trainer import pellet_list
 from trainer.model import get_data_generator
 from trainer import model
 from package_ensemble import EntropyThresholdLayer
+from collections import Counter
 
 PELLET_LIST = pellet_list.PELLET_LIST
 WORKING_DIR = os.getcwd()
 
 parser = argparse.ArgumentParser(
-    description='Test the ensemble model accuracy',
+    description='Test the model accuracy',
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument(
     '--data-files',
@@ -53,31 +53,36 @@ def test_accuracy(args):
     classifier = tf.keras.models.load_model(
         args.model, {'EntropyThresholdLayer': EntropyThresholdLayer})
     predictions = classifier.predict(inputs_gen)
-    
+
     results = []
-    results_within_threshold = []
-    results_under_tresholds = []
+    wrong_results_within_threshold = 0
+    results_under_tresholds = 0
+    wrong = []
     for i, prediction in enumerate(predictions):
-        results.append(int(np.argmax(prediction) == np.argmax(valid_labels[i])))
+        correct = np.argmax(prediction) == np.argmax(valid_labels[i])
+        if not correct:
+            wrong.append(class_list[np.argmax(valid_labels[i])])
+        results.append(int(correct))
         if max(prediction) > 0.5:
-            results_under_tresholds.append(1)
-            results_within_threshold.append(
-                int(np.argmax(prediction) == np.argmax(valid_labels[i])))
+            wrong_results_within_threshold += 1 - int(correct)
         else:
-            results_under_tresholds.append(0)
+            results_under_tresholds += 1
 
     # results is a binary array with 1 for accurate prediction, 0 for false
-    print("Accuracy of the ensemble model on the valid set: %f"
-        % (sum(results) / len(results)))
+    print("Accuracy of the model on %s samples in validation sets: %f"
+        % (len(results), sum(results) / len(results)))
     # results_within_threshold is a binary array with 1 for accurate prediction
     # of high confidence, 0 for false prediction with high confidence
-    print("Percentage of images for which the model was highly confident yet\
-        returned the wrong value: %f" % (
-        1 - sum(results_within_threshold) / len(results_within_threshold)))
+    print("%% of images for which the model was highly confident yet "
+        "returned the wrong value: %f" % (
+        wrong_results_within_threshold / len(results)))
     # results_under_threshold is a binary array with 1 for high confidence
     # prediction, 0 for low confidence predictions
-    print("Percentage of images for which the model was low confidence: %f" % (
-        1 - sum(results_under_tresholds) / len(results_under_tresholds)))
+    print("%% of images for which the model was low confidence: %f" % (
+        results_under_tresholds / len(results)))
+
+    # print("Counts of wrong labels:", dict(Counter(wrong)))
+
 
 if __name__ == '__main__':
     args = parser.parse_args()
