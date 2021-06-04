@@ -1,5 +1,4 @@
 import glob
-import random
 
 import tensorflow as tf
 from tensorflow.keras import layers
@@ -78,7 +77,7 @@ def load_and_preprocess_data(path, working_dir, img_size,
 			files = glob.glob(os.path.join(path, d, '*'))
 			if folder == "train":
 				if max_per_class and len(files) > max_per_class:
-					files = random.sample(files, max_per_class)
+					files = files[: max_per_class]
 
 			for f in files:
 				pill = cv2.imread(os.path.join(path, d, f))
