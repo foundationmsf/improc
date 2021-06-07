@@ -1,9 +1,9 @@
-name: Dev - Mobileapp Tests CI
+name: Main - Mobileapp Tests CI
 on:
   pull_request:
-    branches: [ dev ]
+    branches: [ main ]
   push:
-    branches: [ dev ]
+    branches: [ main ]
 jobs:
   trigger_tests:
     runs-on: ubuntu-latest
@@ -13,4 +13,4 @@ jobs:
       with:
         token: ${{ secrets.MOBILEAPP_REPO_ACCESS_TOKEN }}
         repository: foundationmsf/mobileapp
-        event-type: improc-dev-tests
+        event-type: improc-main-tests
