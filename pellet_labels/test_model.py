@@ -26,6 +26,9 @@ parser.add_argument(
 parser.add_argument(
     '--model', default='models/ensemble_model.h5',
     help='path to keras model')
+parser.add_argument(
+    '--include-train', default=False, action='store_true',
+    help='include train samples in addition to validation samples')
 
 def test_accuracy(args):
     """
@@ -44,6 +47,9 @@ def test_accuracy(args):
             class_list)
         valid_images.append(input_data.valid_data)
         valid_labels.append(input_data.valid_labels)
+        if args.include_train:
+            valid_images.append(input_data.train_data)
+            valid_labels.append(input_data.train_labels)
 
     valid_images = np.concatenate(valid_images, axis=0)
     valid_labels = np.concatenate(valid_labels, axis=0)
@@ -69,17 +75,18 @@ def test_accuracy(args):
             results_under_tresholds += 1
 
     # results is a binary array with 1 for accurate prediction, 0 for false
-    print("Accuracy of the model on %s samples in validation sets: %f"
-        % (len(results), sum(results) / len(results)))
+    print("Accuracy of the model on %s samples in validation %ssets: %.2f%%"
+        % (len(results),
+           "and training " if args.include_train else "",
+           100 * sum(results) / len(results)))
     # results_within_threshold is a binary array with 1 for accurate prediction
     # of high confidence, 0 for false prediction with high confidence
-    print("%% of images for which the model was highly confident yet "
-        "returned the wrong value: %f" % (
-        wrong_results_within_threshold / len(results)))
+    print("Wrong value despite high confidence: %.2f%%" % (
+        100 * wrong_results_within_threshold / len(results)))
     # results_under_threshold is a binary array with 1 for high confidence
     # prediction, 0 for low confidence predictions
-    print("%% of images for which the model was low confidence: %f" % (
-        results_under_tresholds / len(results)))
+    print("Low confidence: %.2f%%" % (
+        100 * results_under_tresholds / len(results)))
 
     # print("Counts of wrong labels:", dict(Counter(wrong)))
 
