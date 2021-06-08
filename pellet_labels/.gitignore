@@ -1,7 +1,11 @@
 __MACOSX
 /amman_atb_data/
+/amman_blood_agar/
+/ensemble_models/
 /i2a_atb_data/
 /models/keras_tensorboard/
 /models/pellet_labels_model.h5
 /models/test/
 /test_data/
+*.pyc
+/train_and_test.txt

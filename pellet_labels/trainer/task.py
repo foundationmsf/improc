@@ -14,10 +14,15 @@ from pathlib import Path
 
 PELLET_LIST = pellet_list.PELLET_LIST
 WORKING_DIR = os.getcwd()
-MODEL_NAME = 'pellet_labels_model.h5'
 
 def get_args():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument(
+        '--model-file',
+        type=str,
+        default='pellet_labels_model.h5',
+        help='Name of the model file')
     parser.add_argument(
         '--job-dir',
         type=str,
@@ -33,60 +38,58 @@ def get_args():
         '--num-epochs',
         type=int,
         default=120,
-        help='number of times to go through the data, default=120')
+        help='number of times to go through the data')
     parser.add_argument(
         '--batch-size',
         type=int,
         default=64,
-        help='number of records to read during each training step, default=64')
+        help='number of records to read during each training step')
     parser.add_argument(
         '--learning-rate',
         type=float,
         default=.001,
-        help='learning rate for gradient descent, default=.001')
+        help='learning rate for gradient descent')
     parser.add_argument(
         '--dropout-rate',
         type=float,
         default=.5,
-        help='rate for dropout layer, default=.5')
+        help='rate for dropout layer')
     parser.add_argument(
         '--img-size',
         type=int,
         default=64,
-        help='square size to resize input images to in pixel, default=64')
+        help='square size to resize input images to in pixel')
     parser.add_argument(
         '--rotation-range',
         type=int,
         default=360,
-        help='range of rotation to use for image augmentation, default=360')
+        help='range of rotation to use for image augmentation')
     parser.add_argument(
         '--image-shift',
         type=float,
         default=0.03,
-        help='shift to use for image augmentation, default=.03')
+        help='shift to use for image augmentation')
     parser.add_argument(
         '--image-zoom',
         type=float,
         default=0.10,
-        help='zoom to use for image augmentation, default=.10')
+        help='zoom to use for image augmentation')
     parser.add_argument(
         '--brightness-range-min',
         type=float,
         default=0.5,
-        help='brightness range minimum to use for image augmentation,\
-        default=.5')
+        help='brightness range minimum to use for image augmentation')
     parser.add_argument(
         '--brightness-range-max',
         type=float,
         default=1.5,
-        help='brightness range maximum to use for image augmentation,\
-        default=1.5')
+        help='brightness range maximum to use for image augmentation')
     parser.add_argument(
         '--min-samples-per-class',
         type=int,
         default=100,
         help='minimum sample to use per class (if lower, oversample \
-        distribution), default=100')
+        distribution)')
     parser.add_argument(
         '--remove-class',
         type=bool,
@@ -101,13 +104,16 @@ def get_args():
         help='weight to attribute to each training set, \
         there should be as many value as there are training folders')
     parser.add_argument(
+        '--max-per-class',
+        type=int,
+        help='limit number of training samples from each data file per class')
+    parser.add_argument(
         '--debug-image-data-generator',
         type=int,
         default=0,
         help='if > 0, creates a directory ImageDataGenerator and outputs the \
         required number of images. Use to debug ImageDataGenerator settings.')
-    args, _ = parser.parse_known_args()
-    return args
+    return parser.parse_known_args()[0]
 
 
 # TODO(Guillaume): add conversion to tflite
@@ -136,7 +142,8 @@ def train_and_evaluate(args):
             WORKING_DIR,
             args.img_size,
             class_list,
-            ukn_classes=removed_list)
+            ukn_classes=removed_list,
+            max_per_class=args.max_per_class)
         train_images.append(input_data.train_data)
         train_labels.append(input_data.train_labels)
         valid_images.append(input_data.valid_data)
@@ -196,9 +203,9 @@ def train_and_evaluate(args):
     # Unhappy hack to workaround h5py not being able to write to GCS.
     # Force snapshots and saves to local filesystem, then copy them over to GCS.
     if args.job_dir.startswith('gs://'):
-        checkpoint_path = MODEL_NAME
+        checkpoint_path = args.model_file
     else:
-        checkpoint_path = os.path.join(args.job_dir, MODEL_NAME)
+        checkpoint_path = os.path.join(args.job_dir, args.model_file)
 
     model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
         checkpoint_path,
@@ -217,7 +224,7 @@ def train_and_evaluate(args):
     # Unhappy hack to workaround h5py not being able to write to GCS.
     # Force snapshots and saves to local filesystem, then copy them over to GCS.
     if args.job_dir.startswith('gs://'):
-      gcs_path = os.path.join(args.job_dir, MODEL_NAME)
+      gcs_path = os.path.join(args.job_dir, args.model_file)
       util.copy_file_to_gcs(checkpoint_path, gcs_path)
 
 

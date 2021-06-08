@@ -13,8 +13,10 @@ from trainer.pellet_list import PELLET_LIST
 WORKING_DIR = os.getcwd()
 MODEL_FOLDER = 'pellet_labels_model'
 
+
 def get_args():
-	parser = argparse.ArgumentParser()
+	parser = argparse.ArgumentParser(
+			formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 	parser.add_argument(
 		'--job-dir',
 		type=str,
@@ -33,16 +35,21 @@ def get_args():
 	parser.add_argument(
 		'--threshold-value',
 		type=float,
-		default=0.023049,
+		default=0.9,
 		help='threshold value to determine whether\
 		an input is out of distribution')
 	parser.add_argument(
 		'--img-size',
 		type=int,
 		default=64,
-		help='square size to resize input images to in pixel, default=64')
-	args, _ = parser.parse_known_args()
-	return args
+		help='square size to resize input images to in pixel')
+	parser.add_argument(
+		'--model-file',
+		type=str,
+		default='pellet_labels_model.h5',
+		help='Name of the model file')
+	return parser.parse_known_args()[0]
+
 
 class EntropyThresholdLayer(layers.Layer):
 
@@ -78,6 +85,7 @@ class EntropyThresholdLayer(layers.Layer):
 		base_config = super(EntropyThresholdLayer, self).get_config()
 		return dict(list(base_config.items()) + list(config.items()))
 
+
 def package_model(args):
 	# Load ensemble models trained on gcloud and repackage them in a single graph
 	# including a final entropy threshold function to enable the model to better 
@@ -87,7 +95,7 @@ def package_model(args):
 
 	# Load models
 	model_paths = util.load_models_from_gcs(
-		args.job_dir, MODEL_FOLDER, task.MODEL_NAME, WORKING_DIR, args.n_ensemble)
+		args.job_dir, MODEL_FOLDER, args.model_file, WORKING_DIR, args.n_ensemble)
 
 	models = []
 	for path in model_paths:
@@ -114,7 +122,8 @@ def package_model(args):
 
 	ensemble_model = tf.keras.Model(inputs=input_layer, outputs=output_layer)
 
-	# Need parameters to compile the model but they are meaningless outside of training
+	# Need parameters to compile the model but they are meaningless outside of
+	# training.
 	ensemble_model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.001),
 								loss=('categorical_crossentropy'))
 

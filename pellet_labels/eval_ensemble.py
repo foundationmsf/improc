@@ -107,6 +107,7 @@ def compute_deviations(predictions):
 	# Compute the deviation between the max probability of each prediction
 	return np.std(np.max(predictions, axis=-1), axis=0)
 
+
 def eval_ensemble(args):
 	# Take an ensemble of models trained on gcloud and evaluate their accuracy in
 	# classifying in and out of distribution data. The evaluation can be done
@@ -117,8 +118,6 @@ def eval_ensemble(args):
 	class_list = [pellet_class for pellet_class in PELLET_LIST
 		if pellet_class not in REMOVED_CLASSES]
 
-	train_images = []
-	train_labels = []
 	valid_images = []
 	valid_labels = []
 	ukn_images = []
@@ -130,14 +129,10 @@ def eval_ensemble(args):
 			args.img_size,
 			class_list,
 			REMOVED_CLASSES)
-		train_images.append(input_data.train_data)
-		train_labels.append(input_data.train_labels)
 		valid_images.append(input_data.valid_data)
 		valid_labels.append(input_data.valid_labels)
 		ukn_images.append(input_data.ukn_data)
 
-	train_images = np.concatenate(train_images, axis=0)
-	train_labels = np.concatenate(train_labels, axis=0)
 	valid_images = np.concatenate(valid_images, axis=0)
 	valid_labels = np.concatenate(valid_labels, axis=0)
 	ukn_images = np.concatenate(ukn_images, axis=0)

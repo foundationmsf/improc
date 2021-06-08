@@ -1,18 +1,18 @@
 import argparse
 import os
-import time
 import numpy as np
 import tensorflow as tf
 from trainer import pellet_list
 from trainer.model import get_data_generator
 from trainer import model
 from package_ensemble import EntropyThresholdLayer
+from collections import Counter
 
 PELLET_LIST = pellet_list.PELLET_LIST
 WORKING_DIR = os.getcwd()
 
 parser = argparse.ArgumentParser(
-    description='Test the ensemble model accuracy',
+    description='Test the model accuracy',
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument(
     '--data-files',
@@ -26,6 +26,9 @@ parser.add_argument(
 parser.add_argument(
     '--model', default='models/ensemble_model.h5',
     help='path to keras model')
+parser.add_argument(
+    '--include-train', default=False, action='store_true',
+    help='include train samples in addition to validation samples')
 
 def test_accuracy(args):
     """
@@ -44,6 +47,9 @@ def test_accuracy(args):
             class_list)
         valid_images.append(input_data.valid_data)
         valid_labels.append(input_data.valid_labels)
+        if args.include_train:
+            valid_images.append(input_data.train_data)
+            valid_labels.append(input_data.train_labels)
 
     valid_images = np.concatenate(valid_images, axis=0)
     valid_labels = np.concatenate(valid_labels, axis=0)
@@ -53,31 +59,37 @@ def test_accuracy(args):
     classifier = tf.keras.models.load_model(
         args.model, {'EntropyThresholdLayer': EntropyThresholdLayer})
     predictions = classifier.predict(inputs_gen)
-    
+
     results = []
-    results_within_threshold = []
-    results_under_tresholds = []
+    wrong_results_within_threshold = 0
+    results_under_tresholds = 0
+    wrong = []
     for i, prediction in enumerate(predictions):
-        results.append(int(np.argmax(prediction) == np.argmax(valid_labels[i])))
+        correct = np.argmax(prediction) == np.argmax(valid_labels[i])
+        if not correct:
+            wrong.append(class_list[np.argmax(valid_labels[i])])
+        results.append(int(correct))
         if max(prediction) > 0.5:
-            results_under_tresholds.append(1)
-            results_within_threshold.append(
-                int(np.argmax(prediction) == np.argmax(valid_labels[i])))
+            wrong_results_within_threshold += 1 - int(correct)
         else:
-            results_under_tresholds.append(0)
+            results_under_tresholds += 1
 
     # results is a binary array with 1 for accurate prediction, 0 for false
-    print("Accuracy of the ensemble model on the valid set: %f"
-        % (sum(results) / len(results)))
+    print("Accuracy of the model on %s samples in validation %ssets: %.2f%%"
+        % (len(results),
+           "and training " if args.include_train else "",
+           100 * sum(results) / len(results)))
     # results_within_threshold is a binary array with 1 for accurate prediction
     # of high confidence, 0 for false prediction with high confidence
-    print("Percentage of images for which the model was highly confident yet\
-        returned the wrong value: %f" % (
-        1 - sum(results_within_threshold) / len(results_within_threshold)))
+    print("Wrong value despite high confidence: %.2f%%" % (
+        100 * wrong_results_within_threshold / len(results)))
     # results_under_threshold is a binary array with 1 for high confidence
     # prediction, 0 for low confidence predictions
-    print("Percentage of images for which the model was low confidence: %f" % (
-        1 - sum(results_under_tresholds) / len(results_under_tresholds)))
+    print("Low confidence: %.2f%%" % (
+        100 * results_under_tresholds / len(results)))
+
+    # print("Counts of wrong labels:", dict(Counter(wrong)))
+
 
 if __name__ == '__main__':
     args = parser.parse_args()
