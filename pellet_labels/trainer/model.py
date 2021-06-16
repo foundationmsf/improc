@@ -83,12 +83,12 @@ def load_and_preprocess_data(path, working_dir, img_size,
 				pill = cv2.imread(os.path.join(path, d, f))
 				pill = format_pill_for_inference(pill, img_size)
 				pill = map_to_common_space(pill)
-				if not d in ukn_classes:
+				if d in ukn_classes:
+					ukn_data.append(pill.reshape(pill.shape + (1,)))
+				elif d in class_list:
 					label = class_list.index(d)
 					labels.append(label)
 					images.append(pill.reshape(pill.shape + (1,)))
-				else:
-					ukn_data.append(pill.reshape(pill.shape + (1,)))
 
 	train_data = np.array(train_data)
 	train_labels = np.array(tf.keras.utils.to_categorical(

@@ -6,8 +6,9 @@ from trainer import pellet_list
 from trainer.model import get_data_generator
 from trainer import model
 from package_ensemble import EntropyThresholdLayer
-from collections import Counter
+from collections import defaultdict
 
+CONFIDENCE_BUCKETS = [.95, .9, .7, .5, .02]
 PELLET_LIST = pellet_list.PELLET_LIST
 WORKING_DIR = os.getcwd()
 
@@ -29,6 +30,7 @@ parser.add_argument(
 parser.add_argument(
     '--include-train', default=False, action='store_true',
     help='include train samples in addition to validation samples')
+
 
 def test_accuracy(args):
     """
@@ -60,33 +62,40 @@ def test_accuracy(args):
         args.model, {'EntropyThresholdLayer': EntropyThresholdLayer})
     predictions = classifier.predict(inputs_gen)
 
-    results = []
-    wrong_results_within_threshold = 0
-    results_under_tresholds = 0
+    corrects = 0
+    # Maps confidence bucket -> count
+    wrong_results_within_threshold = defaultdict(int)
+    # Maps confidence bucket -> count
+    results_under_thresholds = defaultdict(int)
     wrong = []
     for i, prediction in enumerate(predictions):
         correct = np.argmax(prediction) == np.argmax(valid_labels[i])
+        corrects += int(correct)
         if not correct:
             wrong.append(class_list[np.argmax(valid_labels[i])])
-        results.append(int(correct))
-        if max(prediction) > 0.5:
-            wrong_results_within_threshold += 1 - int(correct)
-        else:
-            results_under_tresholds += 1
+        confidence = max(prediction)
+        for bucket in CONFIDENCE_BUCKETS:
+            if confidence >= bucket:
+                wrong_results_within_threshold[bucket] += int(not correct)
+            else:
+                results_under_thresholds[bucket] += 1
 
     # results is a binary array with 1 for accurate prediction, 0 for false
-    print("Accuracy of the model on %s samples in validation %ssets: %.2f%%"
-        % (len(results),
-           "and training " if args.include_train else "",
-           100 * sum(results) / len(results)))
-    # results_within_threshold is a binary array with 1 for accurate prediction
-    # of high confidence, 0 for false prediction with high confidence
-    print("Wrong value despite high confidence: %.2f%%" % (
-        100 * wrong_results_within_threshold / len(results)))
-    # results_under_threshold is a binary array with 1 for high confidence
-    # prediction, 0 for low confidence predictions
-    print("Low confidence: %.2f%%" % (
-        100 * results_under_tresholds / len(results)))
+    print("Accuracy of the model on %s samples in %s: %.2f%%"
+        % (len(predictions),
+           "validation and training sets" if args.include_train
+           else "validation set",
+           100 * corrects / len(predictions)))
+    for bucket in CONFIDENCE_BUCKETS:
+        # results_within_threshold is a binary array with 1 for accurate prediction
+        # of high confidence, 0 for false prediction with high confidence
+        print("Wrong value despite confidence >= %.2f: %.2f%%" % (
+            bucket, 100 * wrong_results_within_threshold[bucket] / len(predictions)),
+              end=" ")
+        # results_under_threshold is a binary array with 1 for high confidence
+        # prediction, 0 for low confidence predictions
+        print("Confidence < %.2f: %.2f%%" % (
+            bucket, 100 * results_under_thresholds[bucket] / len(predictions)))
 
     # print("Counts of wrong labels:", dict(Counter(wrong)))
 
