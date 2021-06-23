@@ -5,8 +5,9 @@ writes a same-named file into a subfolder.
 """
 
 import argparse
+import datetime
 from collections import defaultdict
-
+import shlex
 import astimp
 import cv2
 import numpy as np
@@ -65,7 +66,6 @@ def get_args():
 
 
 args = get_args()
-print("Reading images from", args.input_folder)
 
 CIRCLE_COLOR = (255, 255, 255)
 GOLDEN_CIRCLE_COLOR = (255, 215, 0)
@@ -115,7 +115,8 @@ def parse_and_validate_config(config_path):
 
 
 def draw_overlay(ast_picture_path, ast_output_path, golden_atbs=None):
-  print(ast_picture_path)
+  """Returns the number of pellets found"""
+
   # Load the AST image.
   img = np.array(imread(ast_picture_path))
 
@@ -124,6 +125,9 @@ def draw_overlay(ast_picture_path, ast_output_path, golden_atbs=None):
   cropped = ast.crop.copy()
 
   try:
+    print(ast_picture_path, "found", len(ast.inhibitions),
+          f"of {len(golden_atbs)}" if golden_atbs else "",
+          "pellets")
     for i, inhib in enumerate(ast.inhibitions):
       center_x, center_y = ast.circles[i].center
 
@@ -166,13 +170,16 @@ def draw_overlay(ast_picture_path, ast_output_path, golden_atbs=None):
       cv2.imshow('With overlay', cropped)
       cv2.waitKey(0)
 
+    return len(ast.inhibitions)
+
   except Exception as e:
     print("Error for", ast_picture_path, e)
+    return 0
 
 
-def draw_overlays(args):
-  output_folder = os.path.join(args.input_folder, args.output_subfolder)
+def draw_overlays(args, output_folder):
   Path(output_folder).mkdir(exist_ok=True)
+  total_drawn = 0
 
   if not args.golden:
     for ast_picture in os.listdir(args.input_folder):
@@ -183,14 +190,28 @@ def draw_overlays(args):
       if not os.path.isfile(ast_picture_path):
         continue
 
-      draw_overlay(ast_picture_path, ast_output_path)
+      total_drawn += draw_overlay(ast_picture_path, ast_output_path)
 
   else: # if args.golden
     parsed = parse_and_validate_config(args.golden)
     for ast_picture, golden_atbs in parsed.items():
       ast_picture_path = os.path.join(args.input_folder, ast_picture)
       ast_output_path = os.path.join(output_folder, ast_picture)
-      draw_overlay(ast_picture_path, ast_output_path, golden_atbs)
+      total_drawn += draw_overlay(ast_picture_path, ast_output_path, golden_atbs)
+
+  print (f"Total pellets found: {total_drawn}")
 
 
-draw_overlays(args)
+def output_command_line(output_folder):
+  with open(os.path.join(output_folder, "command.sh"), 'w') as f:
+    print(shlex.join(sys.argv), file=f)
+
+
+if not os.path.exists(args.input_folder):
+  raise Exception(f"Wrong input folder: '{args.input_folder}'")
+output_folder = os.path.join(
+    args.input_folder, args.output_subfolder + str(datetime.date.today()))
+print("Reading images from", args.input_folder)
+print("Writing with overlay to", output_folder)
+output_command_line(output_folder)
+draw_overlays(args, output_folder)
