@@ -104,7 +104,7 @@ class BenchmarkResult:
               .format(perc_more_diffs, diffs_more_mm, n_matched_pellets))
         print("% of antibiotic name matches:    {0:.2%} ({1} / {2})"
               .format(self.n_label_match / self.label_match_denom, self.n_label_match, self.label_match_denom))
-        print("% of exceptions:                 {0:.2%} ({1} / {2})"
+        print("% of files with exceptions:                 {0:.2%} ({1} / {2})"
               .format(perc_exception, self.n_exception, self.n_files_processed))
         print("Diameter diff percentiles:")
         for percentile in [.25, .5, .75, .9, .95]:
