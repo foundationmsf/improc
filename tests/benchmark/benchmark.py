@@ -186,7 +186,7 @@ def run_one_benchmark(item, img_dir, results, preproc_results, method, use_multi
     return improc_results, annotation, ast_image
 
 
-def run_benchmark(config, display, img_dir, preproc_dir, jobs=1, method="vote-count", show_result=False):
+def run_benchmark(config, display, img_dir, preproc_dir, jobs=1, method="vote-count", show_graphs=False):
     """
     Runs AST benchmark as described at the top of this file.
 
@@ -241,8 +241,7 @@ def run_benchmark(config, display, img_dir, preproc_dir, jobs=1, method="vote-co
                 if STOP_DISPLAY:
                     break
 
-    if show_result:
-        results.show_results()
+    results.show_results(show_graphs)
 
     return results.diam_diffs
 
@@ -350,12 +349,15 @@ def main():
     parser.add_argument("-j", "--jobs-number", dest="jobs_number", action='store',
                     default=cpu_count(),
                     help="""The number of parallel processes to run for the benchmark.""")
+    parser.add_argument("-g", "--show-graphs", dest="show_graphs", action='store_true',
+                    help="""Show the result graphs.""")
+
 
     args = parser.parse_args()
     jobs = int(args.jobs_number)
     config = parse_and_validate_config(args.config_file)
-    print("############## ASTApp benchmarking starting on %d files\n" % len(config))
-    run_benchmark(config, args.display, args.image_dir, args.preproc_dir, jobs=jobs, method=args.method, show_result=True)
+    print(f"############## ASTApp benchmarking starting on {len(config)} files in {args.image_dir}\n")
+    run_benchmark(config, args.display, args.image_dir, args.preproc_dir, jobs=jobs, method=args.method, show_graphs=args.show_graphs)
 
 
 if __name__ == '__main__':
