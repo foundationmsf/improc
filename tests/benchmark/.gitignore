@@ -4,3 +4,4 @@ __pycache__/
 pickled_preprocs/
 gitignore*
 last_benchmark.jpg
+all_benchmarks.txt

@@ -65,7 +65,7 @@ class BenchmarkResult:
     def record_diam_diffs(self, diam_diffs):
         self.diam_diffs += diam_diffs
 
-    def show_results(self):
+    def show_results(self, show_graphs):
         print("------------ Summary Results -----------")
         perc_disks_found = self.total_improc_atb / self.total_expected_atb
         abs_diam_diffs = [abs(i) for i in self.diam_diffs]
@@ -111,76 +111,77 @@ class BenchmarkResult:
             print("  {0:.0%}ile: {1:.2f}mm".format(
                 percentile, np.quantile(abs_diam_diffs, percentile)))
 
-        # Plot 4 pie charts repeating the same data as above
-        fig, axs = plt.subplots(2, 2)
-        patches, _ = axs[0, 0].pie(
-            [self.n_exception,
-             self.n_no_pellet,
-             self.n_files_processed - self.n_no_pellet - self.n_exception])
-        axs[0, 0].legend(patches,
-                         ["Exception", "No pellet found", "Pellets found"],
-                         loc="lower left")
-        axs[0, 0].set_title("result categorization")
-        axs[0, 0].axis('equal')
+        if show_graphs:
+            # Plot 4 pie charts repeating the same data as above
+            fig, axs = plt.subplots(2, 2)
+            patches, _ = axs[0, 0].pie(
+                [self.n_exception,
+                 self.n_no_pellet,
+                 self.n_files_processed - self.n_no_pellet - self.n_exception])
+            axs[0, 0].legend(patches,
+                             ["Exception", "No pellet found", "Pellets found"],
+                             loc="lower left")
+            axs[0, 0].set_title("result categorization")
+            axs[0, 0].axis('equal')
 
-        # patches, _ = axs[0, 1].pie([
-        #     sum([diff < 1.0 for diff in abs_diam_diffs]),
-        #     sum([diff >= 1.0 for diff in abs_diam_diffs])])
-        # axs[0, 1].legend(patches, ["<1mm", ">=1mm"], loc="lower left")
-        # axs[0, 1].set_title("diameter diffs; median= {0:.2}mm".format(
-        #     np.median(abs_diam_diffs)))
-        # axs[0, 1].axis('equal')
+            # patches, _ = axs[0, 1].pie([
+            #     sum([diff < 1.0 for diff in abs_diam_diffs]),
+            #     sum([diff >= 1.0 for diff in abs_diam_diffs])])
+            # axs[0, 1].legend(patches, ["<1mm", ">=1mm"], loc="lower left")
+            # axs[0, 1].set_title("diameter diffs; median= {0:.2}mm".format(
+            #     np.median(abs_diam_diffs)))
+            # axs[0, 1].axis('equal')
 
-        keys = error_classes.keys()
-        values = tuple(error_classes[key] for key in keys) 
-        patches, _ = axs[0, 1].pie(values,colors=["#0f9e0b","#60b334","#f9ae52","#db3f34",'gray'])
-        pieBox = axs[0, 1].get_position()
-        axs[0, 1].set_position([pieBox.x0, pieBox.y0, pieBox.width*0.6, pieBox.height])
-        axs[0, 1].legend(patches, keys, bbox_to_anchor=(1, 0), loc="lower left")
-        axs[0, 1].set_title("diameter diffs; median= {0:.2}mm".format(
-            np.median(abs_diam_diffs)))
-        axs[0, 1].axis('equal')
+            keys = error_classes.keys()
+            values = tuple(error_classes[key] for key in keys)
+            patches, _ = axs[0, 1].pie(values,colors=["#0f9e0b","#60b334","#f9ae52","#db3f34",'gray'])
+            pieBox = axs[0, 1].get_position()
+            axs[0, 1].set_position([pieBox.x0, pieBox.y0, pieBox.width*0.6, pieBox.height])
+            axs[0, 1].legend(patches, keys, bbox_to_anchor=(1, 0), loc="lower left")
+            axs[0, 1].set_title("diameter diffs; median= {0:.2}mm".format(
+                np.median(abs_diam_diffs)))
+            axs[0, 1].axis('equal')
 
-        patches, _ = axs[1, 0].pie(
-            [n_matched_pellets, self.total_improc_atb - n_matched_pellets])
-        axs[1, 0].legend(patches,
-                         ["atb name matches", "name mismatches"],
-                         loc="lower left")
-        axs[1, 0].set_title("Antibiotic name matches")
-        axs[1, 0].axis('equal')
+            patches, _ = axs[1, 0].pie(
+                [n_matched_pellets, self.total_improc_atb - n_matched_pellets])
+            axs[1, 0].legend(patches,
+                             ["atb name matches", "name mismatches"],
+                             loc="lower left")
+            axs[1, 0].set_title("Antibiotic name matches")
+            axs[1, 0].axis('equal')
 
-        patches, _ = axs[1, 1].pie(
-            [self.total_improc_atb,
-             self.total_expected_atb - self.total_improc_atb])
-        axs[1, 1].legend(
-            patches, ["Disk found", "Disk missing"], loc="lower left")
-        axs[1, 1].set_title("Antibiotic disks found")
-        axs[1, 1].axis('equal')
+            patches, _ = axs[1, 1].pie(
+                [self.total_improc_atb,
+                 self.total_expected_atb - self.total_improc_atb])
+            axs[1, 1].legend(
+                patches, ["Disk found", "Disk missing"], loc="lower left")
+            axs[1, 1].set_title("Antibiotic disks found")
+            axs[1, 1].axis('equal')
 
-        plt.show()
-        fig.savefig("last_benchmark.jpg")
+            plt.show()
+            fig.savefig("last_benchmark.jpg")
 
-# ---------------- Plot number of antibiotics found per-plate ---------------- #
-        plt.hist(self.num_atb_diffs, bins=20)
-        ## In the image, suptitle actually looks like title,
-        ## title looks like subtitle.
-        plt.suptitle("Golden vs. improc number of pellets found per-AST")
-        plt.title("Left = too few pellets, Right = too many pellets",
-                  fontsize=10)
-        plt.xlabel(
-            "Number of pellets found by improc - golden number of pellets")
-        plt.ylabel("Frequency of ASTs")
-        plt.show()
+    # ---------------- Plot number of antibiotics found per-plate ---------------- #
+            plt.hist(self.num_atb_diffs, bins=20)
+            ## In the image, suptitle actually looks like title,
+            ## title looks like subtitle.
+            plt.suptitle("Golden vs. improc number of pellets found per-AST")
+            plt.title("Left = too few pellets, Right = too many pellets",
+                      fontsize=10)
+            plt.xlabel(
+                "Number of pellets found by improc - golden number of pellets")
+            plt.ylabel("Frequency of ASTs")
+            plt.show()
 
-# -------------------- Plot diameter diffs per-antibiotic -------------------- #
-        plt.hist(self.diam_diffs, bins=30)
-        plt.suptitle("Diameter diffs per-antibiotic")
-        plt.title("Among pellets with matched antibiotic names\n" +
-                  "Left = improc too small, right = improc too large",
-                  fontsize=8)
-        plt.xlabel("Diameter found by improc - golden diameter")
-        plt.ylabel("Frequency of ASTs")
-        plt.show()
+    # -------------------- Plot diameter diffs per-antibiotic -------------------- #
+            plt.hist(self.diam_diffs, bins=30)
+            plt.suptitle("Diameter diffs per-antibiotic")
+            plt.title("Among pellets with matched antibiotic names\n" +
+                      "Left = improc too small, right = improc too large",
+                      fontsize=8)
+            plt.xlabel("Diameter found by improc - golden diameter")
+            plt.ylabel("Frequency of ASTs")
+            plt.show()
 
 
 def parse_and_validate_config(config_path):
