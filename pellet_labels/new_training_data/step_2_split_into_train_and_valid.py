@@ -11,10 +11,10 @@ import os
 import random
 import shutil
 import sys
-from dirs import PELLETS_DIR
+
+from dirs import PELLETS_DIR, sub_dirs, PELLET_LABELS_DIR
 from os import path
 from pathlib import Path
-import pandas as pd
 
 sys.path.append("..")
 from trainer.pellet_list import PELLET_LIST
@@ -23,12 +23,16 @@ from trainer.pellet_list import PELLET_LIST
 PERCENT_VALIDATION = 20
 # If there is <= MIN_TRAIN samples, keep them all in the training set.
 MIN_TRAIN = 2
-PELLET_LABELS_DIR = \
-    path.relpath(path.join(path.dirname(path.realpath(__file__)), ".."))
 
 
 def get_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+            '--input',
+            dest='input_folder',
+            type=str,
+            required=True,
+            help='Input folder with AST pictures.')
     parser.add_argument(
             '--output',
             type=str,
@@ -42,24 +46,14 @@ def get_args():
     return parser.parse_known_args()[0]
 
 
-def sub_dirs(directory):
-    """Returns the names of all subdirectories."""
-    return [f for f in os.listdir(directory)
-            if path.isdir(path.join(directory, f))]
-
-
-def sub_paths(directory):
-    """Returns the paths to all subdirectories."""
-    return [path.join(directory, f) for f in sub_dirs(directory)]
-
-
 def check_pellet_labels():
     """Checks that all pellet labels are in PELLET_LIST. Throws if not."""
     all_found = True
 
-    for label in os.listdir(PELLETS_DIR):
-        if label not in PELLET_LIST:
-            if len(os.listdir(os.path.join(PELLETS_DIR, label))) > 0:
+    pellets_dir = os.path.join(args.input_folder, PELLETS_DIR)
+    for label in os.listdir(pellets_dir):
+        if label not in PELLET_LIST and label != 'unknown':
+            if len(os.listdir(os.path.join(pellets_dir, label))) > 0:
                 print(label, "not found in PELLET_LIST")
                 PELLET_LIST.append(label)
                 all_found = False
@@ -77,26 +71,6 @@ def check_pellet_labels():
     print("Make sure to submit these changes together with the new TFLite model, PELLET_LIST must match the model.")
     print()
     raise Exception("Action needed")
-
-
-def list_data_dirs():
-    """Lists the number of samples in each data dir."""
-    counts = []
-    for data_path in sub_paths(PELLET_LABELS_DIR):
-        if "valid" not in sub_dirs(data_path) \
-                or "train" not in sub_dirs(data_path):
-            continue
-
-        for set_path in sub_paths(data_path):
-            for label_path in sub_dirs(set_path):
-                count_label = len(os.listdir(os.path.join(set_path, label_path)))
-                counts.append([data_path, label_path, count_label])
-
-    df = pd.DataFrame(counts, columns=["Dataset", "Label", "Count"])
-    with pd.option_context('display.max_rows', None,
-                           'display.max_columns', None):
-        print(df.groupby(["Label"]).sum().describe())
-        print(df.groupby(["Label"]).sum().sort_values("Label"))
 
 
 def zip_data(output):
@@ -118,9 +92,13 @@ def split_into_train_and_valid():
         raise Exception("%s already exists. Delete the folder or use "
                         "--force." % output_folder)
 
-    for label in sub_dirs(PELLETS_DIR):
-        label_dir = path.join(PELLETS_DIR, label)
-        files = os.listdir(label_dir)
+    pellets_dir = os.path.join(args.input_folder, PELLETS_DIR)
+    for label in sub_dirs(pellets_dir):
+        if label == "unknown":
+            continue
+        label_dir = path.join(pellets_dir, label)
+        files = [x for x in os.listdir(label_dir)
+                 if path.isfile(path.join(label_dir, x))]
         n = len(files)
         valid = [] if n <= MIN_TRAIN \
             else random.sample(files, round(n * PERCENT_VALIDATION / 100.0))
@@ -138,5 +116,4 @@ if __name__ == "__main__":
     args = get_args()
     check_pellet_labels()
     split_into_train_and_valid()
-    list_data_dirs()
     zip_data(args.output)

@@ -7,12 +7,12 @@ def get_args():
 	parser.add_argument(
 		'--source',
 		type=str,
-		required=True,
+		default="models/ensemble_model.h5",
 		help='path to model to convert')
 	parser.add_argument(
 		'--destination',
 		type=str,
-		required=True,
+		default="models/ensemble_model.tflite",
 		help='full path to save the converted model')
 	args, _ = parser.parse_known_args()
 	return args
