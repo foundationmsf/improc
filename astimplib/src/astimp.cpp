@@ -1017,7 +1017,7 @@ InhibDiamPreprocResult inhib_diam_preprocessing(PetriDish petri,
      */
 
     cv::Mat img;
-    if (astimp::getConfig()->PetriDish.growthMedium == MEDIUM_BLOOD) {
+    if (isGrowthMediumBlood(petri.img)) {
         // copy green channel into red channel
         int fromto[] = {0, 0, 1, 1, 1, 2};
         img = petri.img.clone();
