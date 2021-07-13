@@ -6,15 +6,19 @@ import numpy as np
 import cv2
 import zipfile
 import os
+import random
 
 from util import gcs_util as util
 
 class InputData():
-	def __init__(self, train_data, train_labels, valid_data, valid_labels, ukn_data):
+	def __init__(self, train_data, train_labels, train_filenames, valid_data,
+			valid_labels, valid_filenames, ukn_data):
 		self.train_data = train_data
 		self.train_labels = train_labels
+		self.train_filenames = train_filenames
 		self.valid_data = valid_data
 		self.valid_labels = valid_labels
+		self.valid_filenames = valid_filenames
 		self.ukn_data = ukn_data
 
 def format_pill_for_inference(pill, img_size):
@@ -66,18 +70,19 @@ def load_and_preprocess_data(path, working_dir, img_size,
 	if not os.path.exists(os.path.join(local_path, 'valid')):
 		raise ValueError('No valid folder under unzipped folder')
 
-	(train_data, train_labels) = ([], [])
-	(valid_data, valid_labels) = ([], [])
+	(train_data, train_labels, train_filenames) = ([], [], [])
+	(valid_data, valid_labels, valid_filenames) = ([], [], [])
 	ukn_data = []
 
-	for (images, labels, folder) in [(train_data, train_labels, 'train'),
-															(valid_data, valid_labels, 'valid')]:
+	for (images, labels, filenames, folder) in [
+			(train_data, train_labels, train_filenames, 'train'),
+			(valid_data, valid_labels, valid_filenames, 'valid')]:
 		path = os.path.join(local_path, folder)
 		for d in os.listdir(path):
 			files = glob.glob(os.path.join(path, d, '*'))
 			if folder == "train":
 				if max_per_class and len(files) > max_per_class:
-					files = files[: max_per_class]
+					files = random.sample(files, max_per_class)
 
 			for f in files:
 				pill = cv2.imread(os.path.join(path, d, f))
@@ -89,6 +94,7 @@ def load_and_preprocess_data(path, working_dir, img_size,
 					label = class_list.index(d)
 					labels.append(label)
 					images.append(pill.reshape(pill.shape + (1,)))
+					filenames.append(os.path.join(path, d, f))
 
 	train_data = np.array(train_data)
 	train_labels = np.array(tf.keras.utils.to_categorical(
@@ -98,8 +104,8 @@ def load_and_preprocess_data(path, working_dir, img_size,
 		valid_labels, len(class_list)))
 	ukn_data = np.array(ukn_data)
 
-	input_data = InputData(train_data, train_labels, valid_data,
-		valid_labels, ukn_data)
+	input_data = InputData(train_data, train_labels, train_filenames, valid_data,
+		valid_labels, valid_filenames, ukn_data)
 
 	return input_data
 

@@ -2,11 +2,13 @@ import argparse
 import os
 import numpy as np
 import tensorflow as tf
+import shutil
 from trainer import pellet_list
 from trainer.model import get_data_generator
 from trainer import model
 from package_ensemble import EntropyThresholdLayer
 from collections import defaultdict
+from pathlib import Path
 
 CONFIDENCE_BUCKETS = [.95, .9, .7, .5, .02]
 PELLET_LIST = pellet_list.PELLET_LIST
@@ -30,6 +32,9 @@ parser.add_argument(
 parser.add_argument(
     '--include-train', default=False, action='store_true',
     help='include train samples in addition to validation samples')
+parser.add_argument(
+    '--copy-wrong', type=str, default='',
+    help='folder to copy wrongly classified pellets to')
 
 
 def test_accuracy(args):
@@ -40,6 +45,7 @@ def test_accuracy(args):
 
     valid_images = []
     valid_labels = []
+    valid_filenames = []
 
     for path in args.data_files:
         input_data = model.load_and_preprocess_data(
@@ -49,12 +55,15 @@ def test_accuracy(args):
             class_list)
         valid_images.append(input_data.valid_data)
         valid_labels.append(input_data.valid_labels)
+        valid_filenames.append(input_data.valid_filenames)
         if args.include_train:
             valid_images.append(input_data.train_data)
             valid_labels.append(input_data.train_labels)
+            valid_filenames.append(input_data.train_filenames)
 
     valid_images = np.concatenate(valid_images, axis=0)
     valid_labels = np.concatenate(valid_labels, axis=0)
+    valid_filenames = np.concatenate(valid_filenames, axis=0)
 
     inputs_gen = get_data_generator().flow(valid_images, shuffle=False)
 
@@ -72,7 +81,13 @@ def test_accuracy(args):
         correct = np.argmax(prediction) == np.argmax(valid_labels[i])
         corrects += int(correct)
         if not correct:
-            wrong.append(class_list[np.argmax(valid_labels[i])])
+            golden_label = class_list[np.argmax(valid_labels[i])]
+            predicted_label = class_list[np.argmax(prediction)]
+            wrong.append(golden_label)
+            if args.copy_wrong != "":
+                target_folder = os.path.join(args.copy_wrong, golden_label)
+                Path(target_folder).mkdir(exist_ok=True, parents=True)
+                shutil.copy(valid_filenames[i], target_folder)
         confidence = max(prediction)
         for bucket in CONFIDENCE_BUCKETS:
             if confidence >= bucket:
