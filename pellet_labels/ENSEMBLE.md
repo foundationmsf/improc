@@ -9,12 +9,33 @@ accuracy and out-of-distribution misclassification.
 
 To train multiple models in parallel on gcloud, run
 
-> `. ./train_ensemble.sh`
+> `python3 ensemble_commands.py train`
 
 Modify the script to change the parameters you'd pass to trainer/task.py, the
 destination of the resulting model or the gcloud configuration.
 
 Monitor the training: [docs](https://cloud.google.com/ai-platform/training/docs/monitor-training).
+
+## Package the ensemble model
+
+package_ensemble.py lets you load ensemble models from Google Storage and
+repackage them into a single graph (more performant) with an additional final
+layer that implements an entropy threshold (currently the best result reached
+through multiple evaluation). You can do so with:
+
+> `python3 ensemble_commands.py package`
+
+You might want to first evaluate different values of the threshold parameter,
+using
+
+> `python3 ensemble_commands.py evaluate_thresholds`
+
+## Test the ensemble model
+
+After packaging it, check everything looks good by evaluating it against the
+valid data set with:
+
+> `python3 test_model.py --data-files ./data/amman_atb_data.zip ./data/i2a_atb_data.zip`
 
 ## Evaluate the ensemble model
 
@@ -29,19 +50,3 @@ The script outputs a pandas dataframe with the in-distribution accuracy and
 out-of-distribution misclassification data. ensemble_evaluation.ipynb is a
 simple notebook to load and visualize that evaluation data (potentially
 comparing different runs of evaluation)
-
-## Package the ensemble model
-
-package_ensemble.py lets you load ensemble models from Google Storage and
-repackage them into a single graph (more performant) with an additional final
-layer that implements an entropy threshold (currently the best result reached
-through multiple evaluation). You can do so with:
-
-> `python3 package_ensemble.py --job-dir gs://pellet_labels/pellet_labels_63_classes1`
-
-## Test the ensemble model
-
-After packaging it, check everything looks good by evaluating it against the
-valid data set with:
-
-> `python3 test_model.py --data-files ./data/amman_atb_data.zip ./data/i2a_atb_data.zip`
