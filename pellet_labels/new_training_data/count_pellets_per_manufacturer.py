@@ -8,17 +8,21 @@ from dirs import sub_dirs, sub_paths, PELLET_LABELS_DIR
 
 MANUFACTURERS = {
     "amman_atb_data": "Liofilchem",
-    "amman_blood_agar": "Mix",
+    # All are Liofilchem, except NOR 10 is Oxoid.
+    "amman_blood_agar": {
+        "default": "Liofilchem",
+        "exceptions": {"NOR 10": "Oxoid"}},
     "amman_oxoid": "Oxoid",
     "creteil_blood_agar": "Liofilchem",
     "i2a_atb_data": "i2a",
-    "koutiala_atb_data": "Mix",
+    "koutiala_atb_data": {
+        "default": "Oxoid",
+        "exceptions": {"TCC 85": "BioRad"}},
     "koutiala_bio_rad": "BioRad",
     "koutiala_bio_rad_not_registered": "BioRad",
     "koutiala_blood_agar_not_registered": "BioRad",
     "koutiala_oxoid_blood_agar": "Oxoid",
     "koutiala_oxoid": "Oxoid",
-    "test_data": "Mix"
 }
 
 
@@ -30,6 +34,8 @@ def count_pellets_per_manufacturer(max_per_class=40, one_dir_only=None):
     else:
         all_dirs = sub_dirs(PELLET_LABELS_DIR)
     for data_dir in all_dirs:
+        if "test_data" == data_dir:
+            continue
         data_path = path.join(PELLET_LABELS_DIR, data_dir)
         if "valid" not in sub_dirs(data_path) \
                 or "train" not in sub_dirs(data_path):
@@ -42,6 +48,11 @@ def count_pellets_per_manufacturer(max_per_class=40, one_dir_only=None):
                 count_label = max_per_class
             if count_label > 0:
                 manufacturer = MANUFACTURERS[data_dir]
+                if type(manufacturer) is dict:
+                  if label_path in manufacturer["exceptions"]:
+                    manufacturer = manufacturer["exceptions"][label_path]
+                  else:
+                    manufacturer = manufacturer["default"]
                 counts.append([data_path, label_path, count_label, manufacturer])
 
     df = pd.DataFrame(counts, columns=[
