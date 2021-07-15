@@ -6,7 +6,8 @@ REGION = "europe-west1"
 SCALE_TIER = "BASIC_GPU"
 
 # JOB_NAME and JOB_DIR must be unique and therefore updated for each run
-JOB_NAME = f"pellet_labels_20210713_1551_10zips_max20_random"
+JOB_NAME = f"pellet_labels_20210715_11zips_max40_random"
+TRAIN_PARAMS = "--max-per-class=40"
 JOB_DIR = f"gs://pellet_labels/{JOB_NAME}/pellet_labels_model"
 # Where to place the ensemble model.
 MODEL="models/ensemble_model.h5"
@@ -20,6 +21,7 @@ DATA_ZIPS = [
     "koutiala_bio_rad.zip",
     "koutiala_bio_rad_not_registered.zip",
     "koutiala_blood_agar_not_registered.zip",
+    "koutiala_oxoid.zip",
     "koutiala_oxoid_blood_agar.zip"]
 
 ALL_DATA_ZIPS = " ".join([f"./data/{data_zip}" for data_zip in DATA_ZIPS])
@@ -57,10 +59,9 @@ def bash_redirect(cmd, output, output_file):
 def train():
   """Kicks off gcloud jobs to train all the models which will become part of the
      ensemble model."""
-  train_params = "--max-per-class=20"
   # Check that the trainer works properly before launching jobs in gcloud
   bash(f"python3 -m trainer.task --job-dir ./models --num-epochs 1 "
-       f"{train_params} --train-files {ALL_DATA_ZIPS}")
+       f"{TRAIN_PARAMS} --train-files {ALL_DATA_ZIPS}")
 
   # Copy data files to cloud.
   bash("gsutil -m cp data/* gs://pellet_labels")
@@ -80,7 +81,7 @@ def train():
       --job-dir {JOB_DIR}{i_job} 
       -- 
       --train-files {train_files}
-      {train_params}""".replace("\n", "\\\n"))
+      {TRAIN_PARAMS}""".replace("\n", "\\\n"))
 
 
 def package(package_ensemble_args=""):
@@ -98,6 +99,7 @@ def evaluate():
   print("", file=output, flush=True)
   print(datetime.now(), file=output, flush=True)
   bash_redirect(test_model % ALL_DATA_ZIPS, output, OUTPUT)
+  print("", file=output, flush=True)
   for data_zip in DATA_ZIPS:
     bash_redirect(test_model % f"./data/{data_zip}", output, OUTPUT)
     print("", file=output, flush=True)
@@ -105,7 +107,7 @@ def evaluate():
 
 def evaluate_thresholds():
   """Evaluates different threshold values used when packaging ensemble model."""
-  for threshold in [0.1, 0.25, 0.4, 0.5, 0.9]:
+  for threshold in [0.02, 0.1, 0.25, 0.5, 0.99]:
     package(f"--threshold-value={threshold}")
     evaluate()
 
@@ -113,7 +115,8 @@ def evaluate_thresholds():
 def copy_wrong():
   """Copies wrongly labelled images into subfolder 'wrong' to allow reviewing
      them, especially to find wrong golden labels."""
-  bash(f"python3 test_model.py --data-files {ALL_DATA_ZIPS} --model {MODEL} --include-train --copy-wrong=wrong")
+  bash(f"python3 test_model.py --data-files {ALL_DATA_ZIPS} --model {MODEL}"
+       f" --include-train --copy-wrong=wrong")
 
 
 COMMANDS = {
