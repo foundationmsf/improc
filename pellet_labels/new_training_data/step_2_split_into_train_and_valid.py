@@ -31,7 +31,7 @@ def get_args():
             '--input',
             dest='input_folder',
             type=str,
-            required=True,
+            default="",
             help='Input folder with AST pictures.')
     parser.add_argument(
             '--output',
@@ -43,6 +43,12 @@ def get_args():
             default=False,
             action="store_true",
             help='Forces the script even if destination folder exists.')
+    parser.add_argument(
+            '--zip-only',
+            default=False,
+            action="store_true",
+            help='Only zips the contents of the given `output` folder into '
+                 'data/`output`.zip.')
     return parser.parse_known_args()[0]
 
 
@@ -114,6 +120,7 @@ def split_into_train_and_valid():
 
 if __name__ == "__main__":
     args = get_args()
-    check_pellet_labels()
-    split_into_train_and_valid()
+    if not args.zip_only:
+        check_pellet_labels()
+        split_into_train_and_valid()
     zip_data(args.output)
